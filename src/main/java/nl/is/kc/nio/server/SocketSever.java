@@ -1,5 +1,7 @@
 package nl.is.kc.nio.server;
 
+import nl.is.kc.nio.util.ExecutorFactory;
+
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.StandardSocketOptions;
@@ -19,24 +21,17 @@ public class SocketSever {
     }
 
     private static final int PORT = 5000;
-    private static final int NUMBER_OF_THREADS = 20;
 
     public void launch() {
         try {
-            ExecutorService executorService = Executors.newCachedThreadPool(Executors.defaultThreadFactory());
-            AsynchronousChannelGroup threadGroup = AsynchronousChannelGroup.withCachedThreadPool(executorService, 1);
-//            AsynchronousChannelGroup threadGroup = AsynchronousChannelGroup.withFixedThreadPool(NUMBER_OF_THREADS, Executors.defaultThreadFactory()); // This is very bad: can cause deadlocks (http://isaiah-v.blogspot.nl/2010/11/java-7-avoiding-deadlock-in-nio2.html)
-//            AsynchronousChannelGroup threadGroup = AsynchronousChannelGroup.withThreadPool(Executors.newCachedThreadPool());
+            ExecutorService executorService = ExecutorFactory.createExecutor();
+            Executor readPool = ExecutorFactory.createExecutor();
+            Executor writePool = ExecutorFactory.createExecutor();
 
+            AsynchronousChannelGroup threadGroup = AsynchronousChannelGroup.withCachedThreadPool(executorService, 1);
             AsynchronousServerSocketChannel socketChannel = AsynchronousServerSocketChannel.open(threadGroup);
-//            AsynchronousServerSocketChannel socketChannel = AsynchronousServerSocketChannel.open();
 
             socketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-
-
-            Executor readPool = Executors.newCachedThreadPool(); //Tests
-            Executor writePool = Executors.newCachedThreadPool();
-
             socketChannel.bind(new InetSocketAddress(PORT));
 
             ClientSession clientSession = new ClientSession();

@@ -1,5 +1,6 @@
 package nl.is.kc.nio.client;
 
+import nl.is.kc.nio.util.ExecutorFactory;
 import org.omg.CORBA.Environment;
 
 import java.io.IOException;
@@ -16,50 +17,58 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ClientApplication implements Runnable {
     private static AtomicInteger successCounter = new AtomicInteger(0);
     private static AtomicInteger failCounter = new AtomicInteger(0);
+    private static AtomicInteger exceptionCounter = new AtomicInteger(0);
+    private static AtomicInteger timeoutCounter = new AtomicInteger(0);
+    private static AtomicInteger messageCounter = new AtomicInteger(0);
 
     public static void main(String[] args) {
-        ExecutorService executor = Executors.newCachedThreadPool();
+        ExecutorService executor = ExecutorFactory.createExecutor(5, 50);
+
         long startTime = System.currentTimeMillis();
-        for (int i = 0; i < 50000; i++) {
+        for (int i = 0; i < 1000; i++) {
             Runnable worker = new ClientApplication();
             executor.execute(worker);
         }
 
         executor.shutdown();
-        while(!executor.isTerminated()) {}
+        while (!executor.isTerminated()) {
+        }
         long endTime = System.currentTimeMillis();
         System.out.println(String.format("Done in: %d seconds", (endTime - startTime) / 1000));
+        System.out.println(String.format("Number of messages: %d", messageCounter.get()));
         System.out.println(String.format("Number of successes: %d", successCounter.get()));
+        System.out.println(String.format("Number of timeouts: %d", timeoutCounter.get()));
+        System.out.println(String.format("Number of exceptions: %d", exceptionCounter.get()));
         System.out.println(String.format("Number of fails: %d", failCounter.get()));
     }
 
     public void launch() {
         try (AsynchronousSocketChannel socketChannel = AsynchronousSocketChannel.open()) {
+
             if (socketChannel.isOpen()) {
                 Future<Void> connect = socketChannel.connect(new InetSocketAddress(5000));
                 connect.get(5000, TimeUnit.MILLISECONDS);
 
-                ByteBuffer message = ByteBuffer.wrap(String.format("Thead-%s: %s", String.valueOf(Thread.currentThread().getId()), "Hallo").getBytes());
-                socketChannel.write(message);
+                int counter = 0;
 
-//                ByteBuffer byteBuffer = ByteBuffer.allocate(4000);
-//                socketChannel.read(byteBuffer).get(1000, TimeUnit.MILLISECONDS);
+                for (int i = 0; i < 5000; i++) {
+                    ByteBuffer message = ByteBuffer.wrap(String.format("Thread-%s: %s", String.valueOf(Thread.currentThread().getId()), "Hallo" + counter).getBytes());
+                    socketChannel.write(message);
+                    messageCounter.incrementAndGet();
+                    counter++;
+                }
 
-//            System.out.println("Message received: " + Arrays.toString(byteBuffer.array()));
-
-//                byteBuffer.clear();
-                socketChannel.shutdownInput();
-                socketChannel.shutdownOutput();
                 socketChannel.close();
 
                 successCounter.incrementAndGet();
             } else {
                 failCounter.incrementAndGet();
             }
+        } catch (TimeoutException e) {
+            timeoutCounter.incrementAndGet();
         } catch (Exception e) {
-//            e.printStackTrace();
-            failCounter.incrementAndGet();
-//            System.out.println(e.getMessage());
+            e.printStackTrace();
+            exceptionCounter.incrementAndGet();
         }
     }
 
