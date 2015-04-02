@@ -1,14 +1,7 @@
 package nl.is.kc.nio.server.name_server;
 
 import nl.is.kc.nio.server.SocketServer;
-import nl.is.kc.nio.util.ExecutorFactory;
-
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.net.StandardSocketOptions;
-import java.nio.channels.AsynchronousChannelGroup;
 import java.nio.channels.AsynchronousServerSocketChannel;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Created by ruben on 2-4-15.
