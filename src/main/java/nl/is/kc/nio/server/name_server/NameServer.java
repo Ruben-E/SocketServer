@@ -1,5 +1,6 @@
-package nl.is.kc.nio.name_server;
+package nl.is.kc.nio.server.name_server;
 
+import nl.is.kc.nio.server.SocketServer;
 import nl.is.kc.nio.util.ExecutorFactory;
 
 import java.io.IOException;
@@ -12,27 +13,24 @@ import java.util.concurrent.ExecutorService;
 /**
  * Created by ruben on 2-4-15.
  */
-public class NameServer {
+public class NameServer extends SocketServer {
     private static final int PORT = 5001;
 
     public static void main(String[] args) {
         new NameServer().launch();
     }
 
+    protected NameServer() {
+        super(PORT);
+    }
+
     public void launch() {
-        try {
-            ExecutorService executorService = ExecutorFactory.createExecutor();
-
-            AsynchronousChannelGroup threadGroup = AsynchronousChannelGroup.withCachedThreadPool(executorService, 1);
-            AsynchronousServerSocketChannel socketChannel = AsynchronousServerSocketChannel.open(threadGroup);
-
-            socketChannel.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-            socketChannel.bind(new InetSocketAddress(PORT));
-
+        AsynchronousServerSocketChannel socketServer = buildSocketServer();
+        if (socketServer != null) {
             ClientSession clientSession = new ClientSession();
-            clientSession.setSocketChannel(socketChannel);
+            clientSession.setSocketChannel(socketServer);
 
-            socketChannel.accept(null, clientSession);
+            socketServer.accept(null, clientSession);
 
             synchronized (NameServer.class) {
                 try {
@@ -41,8 +39,6 @@ public class NameServer {
                     e.printStackTrace();
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 }

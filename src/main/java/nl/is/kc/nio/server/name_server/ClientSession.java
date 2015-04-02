@@ -1,4 +1,4 @@
-package nl.is.kc.nio.name_server;
+package nl.is.kc.nio.server.name_server;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
