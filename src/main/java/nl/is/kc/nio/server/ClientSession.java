@@ -46,6 +46,10 @@ public class ClientSession implements CompletionHandler<AsynchronousSocketChanne
 
         @Override
         public void run() {
+            readMessages();
+        }
+
+        private void readMessages() {
             ByteBuffer byteBuffer = ByteBuffer.allocate(BYTEBUFFER_CAPACITY);
 
             try {
@@ -55,11 +59,7 @@ public class ClientSession implements CompletionHandler<AsynchronousSocketChanne
                         byteBuffer.flip();
                         String message = new String(byteBuffer.array());
 
-                        if (writePool == null) {
-                            writePool = Executors.newSingleThreadExecutor(); // Lazy loading
-                        }
-
-                        writePool.execute(new Writer(connection, message));
+                        sendMessage(message);
 
                         byteBuffer.clear();
                         bytesRead = connection.read(byteBuffer).get(TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
@@ -72,6 +72,14 @@ public class ClientSession implements CompletionHandler<AsynchronousSocketChanne
             } catch (InterruptedException | ExecutionException ignored) {
 
             }
+        }
+
+        private void sendMessage(String message) {
+            if (writePool == null) {
+                writePool = Executors.newSingleThreadExecutor(); // Lazy loading
+            }
+
+            writePool.execute(new Writer(connection, message));
         }
 
         private void closeConnection() {
