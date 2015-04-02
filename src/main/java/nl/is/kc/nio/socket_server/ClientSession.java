@@ -1,4 +1,4 @@
-package nl.is.kc.nio.server;
+package nl.is.kc.nio.socket_server;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
