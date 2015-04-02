@@ -24,7 +24,6 @@ public class SocketSever {
         try {
             ExecutorService executorService = ExecutorFactory.createExecutor();
             Executor readPool = ExecutorFactory.createExecutor();
-            Executor writePool = ExecutorFactory.createExecutor();
 
             AsynchronousChannelGroup threadGroup = AsynchronousChannelGroup.withCachedThreadPool(executorService, 1);
             AsynchronousServerSocketChannel socketChannel = AsynchronousServerSocketChannel.open(threadGroup);
@@ -35,7 +34,6 @@ public class SocketSever {
             ClientSession clientSession = new ClientSession();
             clientSession.setSocketChannel(socketChannel);
             clientSession.setReadPool(readPool);
-            clientSession.setWritePool(writePool);
 
             socketChannel.accept(null, clientSession);
 

@@ -5,18 +5,14 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
-import java.util.Stack;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 /**
  * Created by ruben on 1-4-15.
  */
 public class ClientSession implements CompletionHandler<AsynchronousSocketChannel, Void> {
     public static final int TIMEOUT_IN_SECONDS = 10;
-    public static final int BYTEBUFFER_CAPACITY = 50;
+    public static final int BYTEBUFFER_CAPACITY = 1000;
 
     private AsynchronousServerSocketChannel socketChannel;
     private Executor readPool;
@@ -41,10 +37,6 @@ public class ClientSession implements CompletionHandler<AsynchronousSocketChanne
         this.readPool = readPool;
     }
 
-    public void setWritePool(Executor writePool) {
-        this.writePool = writePool;
-    }
-
     private class Reader implements Runnable {
         private AsynchronousSocketChannel connection;
 
@@ -56,16 +48,18 @@ public class ClientSession implements CompletionHandler<AsynchronousSocketChanne
         public void run() {
             ByteBuffer byteBuffer = ByteBuffer.allocate(BYTEBUFFER_CAPACITY);
 
-            Writer writer = new Writer(connection);
-            writePool.execute(writer);
-
             try {
                 int bytesRead = connection.read(byteBuffer).get(TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
                 while (bytesRead != -1) {
                     if (connection.isOpen()) {
                         byteBuffer.flip();
                         String message = new String(byteBuffer.array());
-                        writer.writeMessage(message);
+
+                        if (writePool == null) {
+                            writePool = Executors.newSingleThreadExecutor(); // Lazy loading
+                        }
+
+                        writePool.execute(new Writer(connection, message));
 
                         byteBuffer.clear();
                         bytesRead = connection.read(byteBuffer).get(TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
@@ -93,32 +87,17 @@ public class ClientSession implements CompletionHandler<AsynchronousSocketChanne
 
     private class Writer implements Runnable {
         private AsynchronousSocketChannel connection;
-        private Stack<String> messages; // Stack system because of the multi threaded environment. Under a spam of messages it could happen that the previous write was not completed yet.
+        private String message;
 
-        public Writer(AsynchronousSocketChannel connection) {
+        public Writer(AsynchronousSocketChannel connection, String message) {
             this.connection = connection;
-            this.messages = new Stack<>();
-        }
-
-        public synchronized void writeMessage(String message) {
-            messages.push(message);
+            this.message = message;
         }
 
         @Override
         public void run() {
-            while(connection.isOpen()) {
-                synchronized (this) {
-                    if (!messages.empty()) {
-                        String message = messages.pop();
-                        connection.write(ByteBuffer.wrap(message.getBytes()));
-                    }
-                }
-
-                try {
-                    Thread.sleep(10);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+            if (connection.isOpen()) {
+                connection.write(ByteBuffer.wrap(message.getBytes()));
             }
         }
     }
