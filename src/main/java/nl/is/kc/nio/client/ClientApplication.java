@@ -30,7 +30,7 @@ public class ClientApplication implements Runnable {
     private static AtomicInteger messageCounter = new AtomicInteger(0);
     private static AtomicInteger invalidMessageCounter = new AtomicInteger(0);
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         ExecutorService executor = ExecutorFactory.createExecutor(5, MAXIMUM_POOL_SIZE);
 
         long startTime = System.currentTimeMillis();
@@ -40,8 +40,8 @@ public class ClientApplication implements Runnable {
         }
 
         executor.shutdown();
-        while (!executor.isTerminated()) {
-        }
+        executor.awaitTermination(180, TimeUnit.SECONDS);
+
         long endTime = System.currentTimeMillis();
         System.out.println(String.format("Done in: %d seconds", (endTime - startTime) / 1000));
         System.out.println(String.format("Number of messages: %d", messageCounter.get()));
