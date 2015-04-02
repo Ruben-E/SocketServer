@@ -1,4 +1,4 @@
-package nl.is.kc.nio.socket_server;
+package nl.is.kc.nio.chat_server;
 
 import nl.is.kc.nio.util.ExecutorFactory;
 
@@ -13,9 +13,9 @@ import java.util.concurrent.ExecutorService;
 /**
  * Created by ruben on 1-4-15.
  */
-public class SocketServer {
+public class ChatServer {
     public static void main(String[] args) {
-        new SocketServer().launch();
+        new ChatServer().launch();
     }
 
     private static final int PORT = 5000;
@@ -37,9 +37,9 @@ public class SocketServer {
 
             socketChannel.accept(null, clientSession);
 
-            synchronized (SocketServer.class) {
+            synchronized (ChatServer.class) {
                 try {
-                    SocketServer.class.wait();
+                    ChatServer.class.wait();
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
