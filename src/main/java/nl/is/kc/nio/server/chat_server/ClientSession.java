@@ -104,8 +104,13 @@ public class ClientSession implements CompletionHandler<AsynchronousSocketChanne
 
         @Override
         public void run() {
-            if (connection.isOpen()) {
-                connection.write(ByteBuffer.wrap(message.getBytes()));
+            try {
+                if (connection.isOpen()) {
+                    Future<Integer> write = connection.write(ByteBuffer.wrap(message.getBytes()));
+                    write.get(TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }

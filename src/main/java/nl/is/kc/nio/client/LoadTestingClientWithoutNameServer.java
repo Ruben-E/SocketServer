@@ -3,6 +3,7 @@ package nl.is.kc.nio.client;
 import nl.is.kc.nio.client.model.BulkMessageResponse;
 import nl.is.kc.nio.util.ExecutorFactory;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -19,7 +20,6 @@ public class LoadTestingClientWithoutNameServer extends LoadTestingClient implem
     private static final int PORT = 5000;
     private static final int NUMBER_OF_MESSAGES = 5000;
     private static final int MAXIMUM_POOL_SIZE = 50;
-//    private static final int NUMBER_OF_CONNECTIONS = 1000;
     private static final int NUMBER_OF_CONNECTIONS = 100;
     private static final int CONNECTION_TIMEOUT_IN_SECONDS = 5;
 
@@ -53,7 +53,7 @@ public class LoadTestingClientWithoutNameServer extends LoadTestingClient implem
     public void launch() {
         try (AsynchronousSocketChannel socket = AsynchronousSocketChannel.open()) {
             if (socket.isOpen()) {
-                Future<Void> connect = connectToSocket(socket, new InetSocketAddress(PORT));
+                Future<Void> connect = connectToSocket(socket, new InetSocketAddress(InetAddress.getLocalHost(), PORT));
                 connect.get(CONNECTION_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
 
                 BulkMessageResponse bulkMessageResponse = sendBulkMessagesToSocket(socket, NUMBER_OF_MESSAGES);

@@ -29,6 +29,8 @@ public class ChatServer extends SocketServer {
             clientSession.setSocketChannel(socketServer);
             clientSession.setReadPool(readPool);
 
+            System.out.println(String.format("Server listening on port %d...", PORT));
+
             socketServer.accept(null, clientSession);
 
             synchronized (ChatServer.class) {

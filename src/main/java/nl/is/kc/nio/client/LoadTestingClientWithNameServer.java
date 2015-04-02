@@ -4,6 +4,7 @@ import nl.is.kc.nio.client.model.BulkMessageResponse;
 import nl.is.kc.nio.client.model.NameServerResponse;
 import nl.is.kc.nio.util.ExecutorFactory;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
@@ -17,7 +18,6 @@ public class LoadTestingClientWithNameServer extends LoadTestingClient implement
     private static final int NAME_SERVER_PORT = 5001;
     private static final int NUMBER_OF_MESSAGES = 5000;
     private static final int MAXIMUM_POOL_SIZE = 50;
-    //    private static final int NUMBER_OF_CONNECTIONS = 1000;
     private static final int NUMBER_OF_CONNECTIONS = 100;
     private static final int CONNECTION_TIMEOUT_IN_SECONDS = 5;
 
@@ -76,7 +76,7 @@ public class LoadTestingClientWithNameServer extends LoadTestingClient implement
     private NameServerResponse connectToNameServer() {
         try (AsynchronousSocketChannel socket = AsynchronousSocketChannel.open()) {
             if (socket.isOpen()) {
-                Future<Void> connect = connectToSocket(socket, new InetSocketAddress(NAME_SERVER_PORT));
+                Future<Void> connect = connectToSocket(socket, new InetSocketAddress(InetAddress.getLocalHost(), NAME_SERVER_PORT));
                 connect.get(CONNECTION_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
 
                 ByteBuffer readBuffer = readFromSocket(socket);

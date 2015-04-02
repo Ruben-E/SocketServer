@@ -23,6 +23,8 @@ public class NameServer extends SocketServer {
             ClientSession clientSession = new ClientSession();
             clientSession.setSocketChannel(socketServer);
 
+            System.out.println(String.format("Server listening on port %d...", PORT));
+
             socketServer.accept(null, clientSession);
 
             synchronized (NameServer.class) {
