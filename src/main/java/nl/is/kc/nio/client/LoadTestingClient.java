@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by ruben on 2-4-15.
  */
-public class LoadTestingClient {
+class LoadTestingClient {
     private static final int READ_TIMEOUT_IN_SECONDS = 5;
     private AtomicInteger messageCounter = new AtomicInteger(0);
     private AtomicInteger messageSuccessCounter = new AtomicInteger(0);

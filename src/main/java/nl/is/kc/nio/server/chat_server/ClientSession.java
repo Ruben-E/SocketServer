@@ -87,8 +87,7 @@ public class ClientSession implements CompletionHandler<AsynchronousSocketChanne
                 if (connection.isOpen()) {
                     connection.close();
                 }
-            } catch (IOException e1) {
-                e1.printStackTrace();
+            } catch (IOException ignored) {
             }
         }
     }
